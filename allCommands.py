@@ -1,6 +1,8 @@
 import discord
 from discord.ext.commands import bot
 from discord.ext import commands
+from asyncio import sleep
+from discord.utils import get
 
 class allCommands(commands.Cog):
     def __init__(self, bot):
@@ -12,6 +14,7 @@ class allCommands(commands.Cog):
 
     @commands.command()
     async def poll(self, ctx, *, message):
+        #---VOTING PHASE---#
         await ctx.channel.purge(limit=1)
         messagelist = [x.strip() for x in message.split(',')]
         if len(messagelist) > 11:
@@ -27,6 +30,29 @@ class allCommands(commands.Cog):
         for j in range(len(messagelist)):
             if j > 0:
                 await msg.add_reaction(numbers_to_words[j])
+
+        await sleep(60) #Allow one minute for voting phase, plan to add input for user to determine voting time
+
+        #---LOADING PHASE---#
+        #await ctx.channel.purge(limit=1) <----- May add this back, may want to clean up as to not see the old poll after results post
+        embed=discord.Embed(title = "***" + "Poll results final!" + "***")
+        embed.add_field(name = "", value = "Poll: " + messagelist[0], inline=False)
+        embed.add_field(name = "", value = "Here are the results:", inline=False)
+        embed.add_field(name = "", value = "Loading...", inline=False)
+        temp = await ctx.send(embed=embed)
+        
+        await sleep(3) #Allow short pause to allow bot to retrieve reactions on poll
+
+        #---RESULTS PHASE---#
+        refreshed_msg = await ctx.fetch_message(msg.id)
+        reactions_array = refreshed_msg.reactions
+        await ctx.channel.purge(limit=1)
+        embed=discord.Embed(title = "***" + "Poll results final!" + "***")
+        embed.add_field(name = "", value = "Poll: " + messagelist[0], inline=False)
+        embed.add_field(name = "", value = "Here are the results:", inline=False)
+        for entry in range(len(reactions_array)):
+            embed.add_field(name = "", value = reactions_array[entry].emoji + " " + messagelist[entry + 1] + " --> " + str(reactions_array[entry].count - 1), inline=False)
+        results_msg = await ctx.send(embed=embed)
         
 def setup(bot):
     bot.add_cog(allCommands(bot))
