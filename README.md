@@ -11,7 +11,7 @@ In order to set the bot up locally, the latest version of Python must be install
 
 ### Dependencies
 
-To install discord.py run the following command:
+To install discord.py, run the following command:
 ```
 pip install discord.py
 ```
