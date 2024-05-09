@@ -13,7 +13,7 @@ class allCommands(commands.Cog):
 
     @commands.command(
         help="Shows the ping/latency of the bot in miliseconds.",
-        brief="Shows ping."
+        brief="Format: $ping"
     )
     async def ping(self, ctx):
         logger.info(f"Ping. Sent by: {ctx.message.author}")
@@ -22,7 +22,7 @@ class allCommands(commands.Cog):
     @commands.command(
         help="Allows user to create a poll with up to 10 options, seperated by commas. Format: '$poll [title], [option1], [option2],...[option10]." + 
                 "\nPoll results display after 1 minute.",
-        brief="Format: '$poll [title], [option1], [option2],...[option10]"
+        brief="Format: $poll [title], [option1], [option2],...[option10]"
     )
     async def poll(self, ctx, *, message):
         #---VOTING PHASE---#
@@ -64,6 +64,13 @@ class allCommands(commands.Cog):
         for entry in range(len(reactions_array)):
             embed.add_field(name = "", value = reactions_array[entry].emoji + " " + messagelist[entry + 1] + " --> " + str(reactions_array[entry].count - 1), inline=False)
         results_msg = await ctx.send(embed=embed)
+
+    @commands.command(
+        help="Allows users to delete a specified amount of messages in the current chat (default = 1).",
+        brief="Format: $purge [amount]"
+    )
+    async def purge(self, ctx, amount=1):
+        await ctx.channel.purge(limit=amount+1)
         
 async def setup(bot):
     await bot.add_cog(allCommands(bot))
