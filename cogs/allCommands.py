@@ -12,7 +12,7 @@ class allCommands(commands.Cog):
         self.bot = bot
 
     @commands.command(
-        help="Shows the ping/latency of the bot in miliseconds.",
+        help="Shows the ping/latency of the bot in miliseconds. Format: '$ping'",
         brief="Format: $ping"
     )
     async def ping(self, ctx):
@@ -20,53 +20,51 @@ class allCommands(commands.Cog):
         await ctx.send(f'Pong! :ping_pong: - {round(self.bot.latency * 1000)}ms')
 
     @commands.command(
-        help="Allows user to create a poll with up to 10 options, seperated by commas. Format: '$poll [title], [option1], [option2],...[option10]." + 
-                "\nPoll results display after 1 minute.",
-        brief="Format: $poll [title], [option1], [option2],...[option10]"
+        help="Allows user to create a poll with up to 10 options, seperated by commas. Format: '$poll [title], [time (mins)], [option1], [option2],...[option10]." + 
+                "\nPoll results display after specified amount of time.",
+        brief="Format: $poll [title], [time (mins)], [option1], [option2],...[option10]"
     )
     async def poll(self, ctx, *, message):
         #---VOTING PHASE---#
         await ctx.channel.purge(limit=1)
         messagelist = [x.strip() for x in message.split(',')]
-        if len(messagelist) > 11:
+        if len(messagelist) > 12:
             embed=discord.Embed(title = "***" + "Poll contains too many options!" + "***")
             embed.add_field(name = "", value = "The limit is 10 choices. Please try again.", inline=False)
             return await ctx.send(embed=embed)
+        if messagelist[1].isdigit() == False:
+            embed=discord.Embed(title = "***" + "Poll time invalid!" + "***")
+            embed.add_field(name = "", value = "The poll time in minutes must be expressed as a number. Please try again.", inline=False)
+            return await ctx.send(embed=embed)
+        if len(messagelist) < 3:
+            embed=discord.Embed(title = "***" + "Missing arguments!" + "***")
+            embed.add_field(name = "", value = "You are missing some required arguments for this command. Please try again.", inline=False)
+            return await ctx.send(embed=embed)
         embed=discord.Embed(title = "***" + messagelist[0] + "***")
-        numbers_to_words = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+        numbers_to_words = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
         for i in range(len(messagelist)):
-            if i > 0:
-                embed.add_field(name = "", value = numbers_to_words[i] + " " + messagelist[i], inline=False)
+            if i > 1:
+                embed.add_field(name = "", value = numbers_to_words[i - 2] + " " + messagelist[i], inline=False)
         msg = await ctx.send(embed=embed)
         for j in range(len(messagelist)):
-            if j > 0:
-                await msg.add_reaction(numbers_to_words[j])
+            if j > 1:
+                await msg.add_reaction(numbers_to_words[j - 2])
 
-        await sleep(60) #Allow one minute for voting phase, plan to add input for user to determine voting time
-
-        #---LOADING PHASE---#
-        #await ctx.channel.purge(limit=1) <----- May add this back, may want to clean up as to not see the old poll after results post
-        embed=discord.Embed(title = "***" + "Poll results final!" + "***")
-        embed.add_field(name = "", value = "Poll: " + messagelist[0], inline=False)
-        embed.add_field(name = "", value = "Here are the results:", inline=False)
-        embed.add_field(name = "", value = "Loading...", inline=False)
-        temp = await ctx.send(embed=embed)
-
-        await sleep(3) #Allow short pause to allow bot to retrieve reactions on poll
+        await sleep(int(messagelist[1]) * 60) #Voting phase length is now determined by user input
 
         #---RESULTS PHASE---#
         refreshed_msg = await ctx.fetch_message(msg.id)
         reactions_array = refreshed_msg.reactions
-        await ctx.channel.purge(limit=1)
+        #await ctx.channel.purge(limit=1) May add this back, may want to clean up as to not see the old poll after results post
         embed=discord.Embed(title = "***" + "Poll results final!" + "***")
         embed.add_field(name = "", value = "Poll: " + messagelist[0], inline=False)
         embed.add_field(name = "", value = "Here are the results:", inline=False)
         for entry in range(len(reactions_array)):
-            embed.add_field(name = "", value = reactions_array[entry].emoji + " " + messagelist[entry + 1] + " --> " + str(reactions_array[entry].count - 1), inline=False)
+            embed.add_field(name = "", value = reactions_array[entry].emoji + " " + messagelist[entry + 2] + " --> " + str(reactions_array[entry].count - 1), inline=False)
         results_msg = await ctx.send(embed=embed)
 
     @commands.command(
-        help="Allows users to delete a specified amount of messages in the current chat (default = 1).",
+        help="Allows users to delete a specified amount of messages in the current chat (default = 1). Format: '$purge [amount]'",
         brief="Format: $purge [amount]"
     )
     async def purge(self, ctx, amount=1):
