@@ -1,6 +1,8 @@
+import asyncio
 import settings
 import discord
 from discord.ext import commands
+from discord.ext.commands import MissingPermissions
 
 from asyncio import sleep
 from discord.utils import get
@@ -64,10 +66,30 @@ class allCommands(commands.Cog):
         results_msg = await ctx.send(embed=embed)
 
     @commands.command(
-        help="Allows users to delete a specified amount of messages in the current chat (default = 1). Format: '$purge [amount]'",
-        brief="Format: $purge [amount]"
+        help="Allows users to delete a specified amount of messages (up to 100) in the current chat (default = 1). Format: '$purge [amount]'",
+        brief="Max: 100 - Format: $purge [amount]"
     )
+    @commands.has_permissions(administrator = True)
     async def purge(self, ctx, amount=1):
+
+        if(amount > 100):
+            await ctx.send("The maximum amount of messages you can purge is 100!")
+            return
+
+        await ctx.send("Are you sure you want to purge " + str(amount) + " messages? (yes/no)")
+
+        def check(m): # checking that confirmation is from the same user in the same channel
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        try: # waiting for message
+            response = await self.bot.wait_for('message', check=check, timeout=30.0)
+        except asyncio.TimeoutError:
+            return
+
+        # if response is different than yes / y - return
+        if response.content.lower() not in ("yes", "y"): # lower() makes everything lowercase to also catch: YeS, YES etc.
+            return
+
         await ctx.channel.purge(limit=amount+1)
         
 async def setup(bot):
