@@ -30,6 +30,12 @@ async def main():
         if message.content.startswith("$"):
             await message.add_reaction("👍")
         await bot.process_commands(message)
+
+    @bot.event
+    async def  on_command_error(ctx, error):    
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send("Sorry " + ctx.message.author.name + "... you can't do that ;-;")
+            await ctx.message.delete()
     
     await bot.start(settings.DISCORD_API_SECRET)
 
