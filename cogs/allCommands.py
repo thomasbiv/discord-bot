@@ -90,7 +90,7 @@ class allCommands(commands.Cog):
         if response.content.lower() not in ("yes", "y"): # lower() makes everything lowercase to also catch: YeS, YES etc.
             return
 
-        await ctx.channel.purge(limit=amount+1)
+        await ctx.channel.purge(limit=amount+3)
         
 async def setup(bot):
     await bot.add_cog(allCommands(bot))
